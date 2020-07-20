@@ -9,10 +9,19 @@ repositories {
     mavenCentral()
 }
 
+dependencyManagement {
+    dependencies {
+        dependency "com.github.pengrad:java-telegram-bot-api:4.9.0"
+        dependency "org.dizitart:nitrite:3.4.2"
+    }
+}
+
 dependencies {
+    implementation "com.github.pengrad:java-telegram-bot-api"
+    implementation "org.dizitart:nitrite"
     implementation "org.springframework.boot:spring-boot-starter-web"
     
-    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testImplementation "org.springframework.boot:spring-boot-starter-test"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
 }
 
