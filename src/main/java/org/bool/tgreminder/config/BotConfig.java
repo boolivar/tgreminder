@@ -1,19 +1,16 @@
 package org.bool.tgreminder.config;
 
-import com.pengrad.telegrambot.TelegramBot;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.bool.tgreminder.core.TelegramBotToken;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.pengrad.telegrambot.TelegramBot;
+
 @Configuration
-@ConfigurationProperties("telegram-bot")
 public class BotConfig {
 
-    private String token;
-
     @Bean
-    public TelegramBot telegramBot() {
-        return new TelegramBot(token);
+    public TelegramBot telegramBot(TelegramBotToken token) {
+        return new TelegramBot(token.getValue());
     }
 }
