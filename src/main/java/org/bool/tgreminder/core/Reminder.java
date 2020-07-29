@@ -6,10 +6,10 @@ import com.pengrad.telegrambot.response.SendResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.SchedulingTaskExecutor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Instant;
 
 @Component
 public class Reminder {
@@ -18,11 +18,11 @@ public class Reminder {
     
     private final TelegramBot telegramBot;
 
-    private final SchedulingTaskExecutor taskExecutor;
+    private final TaskScheduler scheduler;
 
-    public Reminder(TelegramBot telegramBot, SchedulingTaskExecutor taskExecutor) {
+    public Reminder(TelegramBot telegramBot, TaskScheduler scheduler) {
         this.telegramBot = telegramBot;
-        this.taskExecutor = taskExecutor;
+        this.scheduler = scheduler;
     }
 
     public boolean remind() {
@@ -30,7 +30,7 @@ public class Reminder {
     }
 
     public void remind(Long id, String message) {
-        taskExecutor.execute(() -> send(id, message), TimeUnit.SECONDS.toMillis(5));
+        scheduler.schedule(() -> send(id, message), Instant.now().plusSeconds(5));
     }
     
     private void send(Long chatId, String message) {
