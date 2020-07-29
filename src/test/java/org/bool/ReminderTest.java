@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ReminderTest {
     
-    private final Reminder reminder = new Reminder();
+    private final Reminder reminder = new Reminder(null, null);
     
     @Test
     void testRemind() {
