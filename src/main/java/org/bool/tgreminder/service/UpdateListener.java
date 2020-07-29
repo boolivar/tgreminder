@@ -1,13 +1,13 @@
 package org.bool.tgreminder.service;
 
-import java.util.List;
+import com.pengrad.telegrambot.TelegramBot;
+import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.model.Update;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Update;
+import java.util.List;
 
 @Component
 public class UpdateListener implements UpdatesListener {

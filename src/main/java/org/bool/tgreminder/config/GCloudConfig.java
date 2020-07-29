@@ -1,13 +1,13 @@
 package org.bool.tgreminder.config;
 
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.FirestoreOptions;
+
 import org.bool.tgreminder.core.TelegramBotToken;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.FirestoreOptions;
 
 @Profile("gcloud")
 @Configuration
