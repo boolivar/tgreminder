@@ -19,7 +19,11 @@ dependencyManagement {
 dependencies {
     implementation "com.github.pengrad:java-telegram-bot-api"
     implementation "org.dizitart:nitrite"
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "org.springframework.boot:spring-boot-starter-jdbc"
     implementation "org.springframework.boot:spring-boot-starter-web"
+    runtimeOnly "com.h2database:h2"    
+    runtimeOnly "org.postgresql:postgresql"
     
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine"
