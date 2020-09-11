@@ -24,22 +24,22 @@ public class RemindController {
     private RemindService remindService;
     
     @GetMapping("{userId}")
-    public List<ReminderDto> list(@PathVariable("index") Long userId) {
+    public List<ReminderDto> list(@PathVariable("userId") Long userId) {
         return remindService.list(userId);
     }
     
     @PostMapping("{userId}")
-    public void remind(@PathVariable("index") Long userId, @RequestBody String request) {
+    public void remind(@PathVariable("userId") Long userId, @RequestBody String request) {
         remindService.remind(userId, request);
     }
     
     @DeleteMapping("{userId}/{index}")
-    public void cancel(@PathVariable("index") Long userId, @PathVariable("index") Integer index) {
+    public void cancel(@PathVariable("userId") Long userId, @PathVariable("index") Integer index) {
         remindService.cancel(userId, index);
     }
     
     @DeleteMapping("{userId}")
-    public void clear(@PathVariable("index") Long userId) {
+    public void clear(@PathVariable("userId") Long userId) {
         remindService.cancelAll(userId);
     }
 }
