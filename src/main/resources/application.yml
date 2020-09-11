@@ -1,1 +1,9 @@
 logging.pattern.console: '%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(10348){magenta} %clr(---){faint} %clr([%t]){faint} %clr(%logger{40}){cyan} %clr(:){faint} %m%n%wEx'
+
+management.endpoint.health.show-details: always
+
+spring:
+  datasource:
+    url: ${JDBC_DATABASE_URL}
+    username: ${JDBC_DATABASE_USERNAME}
+    password: ${JDBC_DATABASE_PASSWORD}
