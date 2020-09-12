@@ -5,6 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Component
@@ -16,11 +20,20 @@ public class Repository {
         this.jdbcTemplate = jdbcTemplate;
     }
     
-    public List<ReminderDto> findByUserId(Long userId) {
-        return jdbcTemplate.query("select 1", this::mapDto);
+    public List<ReminderDto> findNext(OffsetDateTime time) {
+        return jdbcTemplate.query("select * from REMINDERS where TIME = (select MIN(TIME) from REMINDERS where TIME > ?)", this::mapDto, Timestamp.from(time.toInstant()));
     }
     
-    private ReminderDto mapDto(ResultSet rs, int index) {
-        return new ReminderDto();
+    public List<ReminderDto> findByUserId(Long userId) {
+        return jdbcTemplate.query("select * from REMINDERS where USER_ID = ?", this::mapDto, userId);
+    }
+    
+    public void store(Long userId, String message, OffsetDateTime time) {
+        jdbcTemplate.update("insert into REMINDERS(ID, USER_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), ?, ?, ?)",
+                userId, message, Timestamp.from(time.toInstant()));
+    }
+    
+    private ReminderDto mapDto(ResultSet rs, int index) throws SQLException {
+        return new ReminderDto(OffsetDateTime.ofInstant(rs.getTimestamp("TIME").toInstant(), ZoneOffset.UTC), rs.getString("MESSAGE"));
     }
 }
