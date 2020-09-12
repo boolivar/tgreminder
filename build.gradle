@@ -12,13 +12,12 @@ repositories {
 dependencyManagement {
     dependencies {
         dependency "com.github.pengrad:java-telegram-bot-api:4.9.0"
-        dependency "org.dizitart:nitrite:3.4.2"
     }
 }
 
 dependencies {
     implementation "com.github.pengrad:java-telegram-bot-api"
-    implementation "org.dizitart:nitrite"
+    implementation "org.apache.commons:commons-lang3"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "org.springframework.boot:spring-boot-starter-jdbc"
     implementation "org.springframework.boot:spring-boot-starter-web"
