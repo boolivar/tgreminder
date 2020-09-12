@@ -1,26 +1,26 @@
 package org.bool.tgreminder.dto;
 
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 
 public class ReminderDto {
 
-    private ZonedDateTime time;
+    private OffsetDateTime time;
     
     private String message;
     
     public ReminderDto() {
     }
     
-    public ReminderDto(ZonedDateTime time, String message) {
+    public ReminderDto(OffsetDateTime time, String message) {
         this.time = time;
         this.message = message;
     }
 
-    public ZonedDateTime getTime() {
+    public OffsetDateTime getTime() {
         return time;
     }
 
-    public void setTime(ZonedDateTime time) {
+    public void setTime(OffsetDateTime time) {
         this.time = time;
     }
 
