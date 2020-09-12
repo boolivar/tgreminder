@@ -1,3 +1,7 @@
-create table USER(ID bigint, NAME varchar(256), TIME_ZONE varchar(128));
+create table USERS(ID bigint, NAME varchar(256), TIME_ZONE varchar(128));
 
-create table REMINDER(ID bigint, USER_ID bigint, MESSAGE varchar(256), TIME timestamp, FLAGS varchar(128));
+create table REMINDERS(ID bigint, USER_ID bigint, MESSAGE varchar(256), TIME timestamp, FLAGS varchar(128));
+
+create sequence USERS_SEQ;
+
+create sequence REMINDERS_SEQ;
