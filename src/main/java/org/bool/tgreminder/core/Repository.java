@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 @Component
 public class Repository {
@@ -18,6 +19,10 @@ public class Repository {
     
     public Repository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+    }
+    
+    public void queryByTime(OffsetDateTime time, BiConsumer<Long, String> handler) {
+        jdbcTemplate.query("select * from REMINDERS where TIME = ?)", (ResultSet rs) -> handler.accept(rs.getLong("USER_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
     }
     
     public List<ReminderDto> findNext(OffsetDateTime time) {
