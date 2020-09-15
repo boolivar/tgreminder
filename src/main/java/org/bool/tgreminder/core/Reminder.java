@@ -4,7 +4,6 @@ import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.request.SendMessage;
 import com.pengrad.telegrambot.response.SendResponse;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.TaskScheduler;
@@ -41,10 +40,18 @@ public class Reminder {
     public void remind(Long id, String message, OffsetDateTime time) {
         repository.store(id, message, time);
         ScheduledFuture<?> future = scheduler.schedule(() -> repository.queryByTime(time, this::send), time.toInstant());
-        ScheduledFuture<?> old = ref.getAndAccumulate(future, ObjectUtils::min);
+        ScheduledFuture<?> old = ref.getAndAccumulate(future, this::min);
         if (old != null) {
-            ObjectUtils.max(old, future).cancel(false);
+            max(future, old).cancel(false);
         }
+    }
+    
+    private <T extends Comparable<? super T>> T min(T a, T b) {
+        return a == null || b.compareTo(a) < 0 ? b : a;
+    }
+    
+    private <T extends Comparable<? super T>> T max(T a, T b) {
+        return a == null || b.compareTo(a) > 0 ? b : a;
     }
     
     private void send(Long chatId, String message) {

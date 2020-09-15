@@ -5,6 +5,8 @@ import com.pengrad.telegrambot.TelegramBot;
 import org.bool.tgreminder.core.Reminder;
 import org.bool.tgreminder.core.Repository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.scheduling.TaskScheduler;
 
 import java.time.Instant;
@@ -13,14 +15,11 @@ import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Delayed;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
 class ReminderTest {
@@ -48,23 +47,36 @@ class ReminderTest {
         assertEquals(300, ref.get().getDelay(TimeUnit.MILLISECONDS));
     }
     
-    @Test
-    void testReschedule() {
+    @CsvSource({
+        "200,300,200",
+        "300,200,200",
+        "500,200,200",
+        "100,300,100",
+        "100,100,100",
+        "200,200,200",
+    })
+    @ParameterizedTest
+    void testReschedule(long first, long second, long expected) {
         OffsetDateTime time1 = Instant.ofEpochSecond(220000).atOffset(ZoneOffset.UTC);
-        OffsetDateTime time2 = Instant.ofEpochSecond(520000).atOffset(ZoneOffset.UTC);
+        OffsetDateTime time2 = Instant.ofEpochSecond(330000).atOffset(ZoneOffset.UTC);
         
         given(scheduler.schedule(any(), eq(time1.toInstant())))
-                .willReturn(new TestFuture<>(200));
-        given(scheduler.schedule(any(), eq(time1.toInstant())))
-                .willReturn(new TestFuture<>(500));
+                .willReturn(new TestFuture<>(first));
+        given(scheduler.schedule(any(), eq(time2.toInstant())))
+                .willReturn(new TestFuture<>(second));
+        
+        ScheduledFuture<?> f1 = scheduler.schedule(null, time1.toInstant());
+        ScheduledFuture<?> f2 = scheduler.schedule(null, time2.toInstant());
         
         reminder.remind(22L, "test1", time1);
-        reminder.remind(52L, "test2", time2);
+        reminder.remind(33L, "test2", time2);
         
         then(repository).should().store(22L, "test1", time1);
-        then(repository).should().store(52L, "test2", time2);
+        then(repository).should().store(33L, "test2", time2);
         
-        assertEquals(200, ref.get().getDelay(TimeUnit.MILLISECONDS));
+        assertEquals(expected, ref.get().getDelay(TimeUnit.MILLISECONDS));
+        assertFalse(ref.get().isCancelled());
+        assertTrue(f1.isCancelled() != f2.isCancelled());
     }
     
     static class TestFuture<T> extends CompletableFuture<T> implements ScheduledFuture<T> {
