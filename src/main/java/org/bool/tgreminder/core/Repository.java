@@ -1,6 +1,7 @@
 package org.bool.tgreminder.core;
 
 import org.bool.tgreminder.dto.ReminderDto;
+import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 @Component
@@ -25,8 +27,9 @@ public class Repository {
         jdbcTemplate.query("select * from REMINDERS where TIME = ?)", (ResultSet rs) -> handler.accept(rs.getLong("USER_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
     }
     
-    public List<ReminderDto> findNext(OffsetDateTime time) {
-        return jdbcTemplate.query("select * from REMINDERS where TIME = (select MIN(TIME) from REMINDERS where TIME > ?)", this::mapDto, Timestamp.from(time.toInstant()));
+    public Optional<OffsetDateTime> findNext(OffsetDateTime time) {
+        List<OffsetDateTime> values = jdbcTemplate.query("select MIN(TIME) from REMINDERS where TIME > ?", (rs, i) -> convertTime(rs.getTimestamp(1)), time);
+        return Optional.ofNullable(DataAccessUtils.singleResult(values));
     }
     
     public List<ReminderDto> findByUserId(Long userId) {
@@ -39,6 +42,10 @@ public class Repository {
     }
     
     private ReminderDto mapDto(ResultSet rs, int index) throws SQLException {
-        return new ReminderDto(OffsetDateTime.ofInstant(rs.getTimestamp("TIME").toInstant(), ZoneOffset.UTC), rs.getString("MESSAGE"));
+        return new ReminderDto(convertTime(rs.getTimestamp("TIME")), rs.getString("MESSAGE"));
+    }
+    
+    private OffsetDateTime convertTime(Timestamp timestamp) {
+        return OffsetDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
     }
 }

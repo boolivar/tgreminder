@@ -10,8 +10,11 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.annotation.PostConstruct;
 
 @Component
 public class Reminder {
@@ -37,13 +40,39 @@ public class Reminder {
         this.ref = ref;
     }
     
+    @PostConstruct
+    public void reschedule() {
+        reschedule(OffsetDateTime.now());
+    }
+    
     public void remind(Long id, String message, OffsetDateTime time) {
         repository.store(id, message, time);
-        ScheduledFuture<?> future = scheduler.schedule(() -> repository.queryByTime(time, this::send), time.toInstant());
+        ScheduledFuture<?> future = schedule(time);
         ScheduledFuture<?> old = ref.getAndAccumulate(future, this::min);
         if (old != null) {
-            max(future, old).cancel(false);
+            ScheduledFuture<?> toCancel = max(future, old);
+            toCancel.cancel(false);
+            if (toCancel != future) {
+                log.info("Schedule to {}", time);
+            }
         }
+    }
+    
+    private ScheduledFuture<?> schedule(OffsetDateTime time) {
+        return scheduler.schedule(() -> remind(time), time.toInstant());
+    }
+    
+    private void reschedule(OffsetDateTime time) {
+        Optional<OffsetDateTime> next = repository.findNext(time);
+        if (next.isPresent()) {
+            ref.set(schedule(next.get()));
+        }
+        log.info("Reschedule to {}", next);
+    }
+    
+    private void remind(OffsetDateTime time) {
+        repository.queryByTime(time, this::send);
+        reschedule(time);
     }
     
     private <T extends Comparable<? super T>> T min(T a, T b) {
