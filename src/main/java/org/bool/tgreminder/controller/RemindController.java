@@ -10,9 +10,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
@@ -29,17 +31,12 @@ public class RemindController {
     }
     
     @PostMapping("{userId}")
-    public void remind(@PathVariable("userId") Long userId, @RequestBody String request) {
-        remindService.remind(userId, request);
+    public void remind(@PathVariable("userId") Long userId, @RequestParam("time") OffsetDateTime time, @RequestBody String request) {
+        remindService.remind(userId, request, time);
     }
     
     @DeleteMapping("{userId}/{index}")
-    public void cancel(@PathVariable("userId") Long userId, @PathVariable("index") Integer index) {
+    public void cancel(@PathVariable("userId") Long userId, @PathVariable(name = "index", required = false) Integer index) {
         remindService.cancel(userId, index);
-    }
-    
-    @DeleteMapping("{userId}")
-    public void clear(@PathVariable("userId") Long userId) {
-        remindService.cancelAll(userId);
     }
 }
