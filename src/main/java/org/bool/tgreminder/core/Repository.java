@@ -33,12 +33,20 @@ public class Repository {
     }
     
     public List<ReminderDto> findByUserId(Long userId) {
-        return jdbcTemplate.query("select * from REMINDERS where USER_ID = ?", this::mapDto, userId);
+        return jdbcTemplate.query("select * from REMINDERS where USER_ID = ? order by TIME, ID", this::mapDto, userId);
     }
     
     public void store(Long userId, String message, OffsetDateTime time) {
         jdbcTemplate.update("insert into REMINDERS(ID, USER_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), ?, ?, ?)",
                 userId, message, Timestamp.from(time.toInstant()));
+    }
+    
+    public int delete(Long userId, Integer index) {
+        return jdbcTemplate.update("delete from REMINDERS where ID = (select ID from (select ID, row_number() over (order by TIME, ID) RN from REMINDERS where USER_ID = ?) where RN = ?)", userId, index);
+    }
+    
+    public int deleteAll(Long userId) {
+        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ?", userId);
     }
     
     private ReminderDto mapDto(ResultSet rs, int index) throws SQLException {
