@@ -6,13 +6,10 @@ import com.pengrad.telegrambot.response.SendResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PostConstruct;
 
@@ -21,23 +18,16 @@ public class Reminder {
     
     private static final Logger log = LoggerFactory.getLogger(Reminder.class);
     
-    private final Repository repository;
+    private final ReminderScheduler scheduler;
     
-    private final TaskScheduler scheduler;
+    private final Repository repository;
     
     private final TelegramBot telegramBot;
     
-    private final AtomicReference<ScheduledFuture<?>> ref;
-    
-    public Reminder(Repository repository, TaskScheduler scheduler, TelegramBot telegramBot) {
-        this(repository, scheduler, telegramBot, new AtomicReference<>());
-    }
-    
-    public Reminder(Repository repository, TaskScheduler scheduler, TelegramBot telegramBot, AtomicReference<ScheduledFuture<?>> ref) {
-        this.repository = repository;
+    public Reminder(ReminderScheduler scheduler, Repository repository, TelegramBot telegramBot) {
         this.scheduler = scheduler;
+        this.repository = repository;
         this.telegramBot = telegramBot;
-        this.ref = ref;
     }
     
     @PostConstruct
@@ -47,27 +37,7 @@ public class Reminder {
     
     public void remind(Long id, String message, OffsetDateTime time) {
         repository.store(id, message, time);
-        ScheduledFuture<?> future = schedule(time);
-        ScheduledFuture<?> old = ref.getAndAccumulate(future, this::min);
-        if (old != null) {
-            ScheduledFuture<?> toCancel = max(future, old);
-            toCancel.cancel(false);
-            if (toCancel != future) {
-                log.info("Schedule to {}", time);
-            }
-        }
-    }
-    
-    private ScheduledFuture<?> schedule(OffsetDateTime time) {
-        return scheduler.schedule(() -> remind(time), time.toInstant());
-    }
-    
-    private void reschedule(OffsetDateTime time) {
-        Optional<OffsetDateTime> next = repository.findNext(time);
-        if (next.isPresent()) {
-            ref.set(schedule(next.get()));
-        }
-        log.info("Reschedule to {}", next);
+        scheduler.schedule(this::remind, time);
     }
     
     private void remind(OffsetDateTime time) {
@@ -75,12 +45,12 @@ public class Reminder {
         reschedule(time);
     }
     
-    private <T extends Comparable<? super T>> T min(T a, T b) {
-        return a == null || b.compareTo(a) < 0 ? b : a;
-    }
-    
-    private <T extends Comparable<? super T>> T max(T a, T b) {
-        return a == null || b.compareTo(a) > 0 ? b : a;
+    private void reschedule(OffsetDateTime time) {
+        Optional<OffsetDateTime> next = repository.findNext(time);
+        if (next.isPresent()) {
+            scheduler.reset(this::remind, time);
+        }
+        log.info("Reschedule to {}", next);
     }
     
     private void send(Long chatId, String message) {
