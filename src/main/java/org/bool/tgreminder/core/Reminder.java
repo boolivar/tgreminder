@@ -8,7 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
@@ -17,6 +19,8 @@ import javax.annotation.PostConstruct;
 public class Reminder {
     
     private static final Logger log = LoggerFactory.getLogger(Reminder.class);
+    
+    private static final Duration THRESHOLD = Duration.ofMinutes(5);
     
     private final ReminderScheduler scheduler;
     
@@ -36,6 +40,15 @@ public class Reminder {
     }
     
     public void remind(Long id, String message, OffsetDateTime time) {
+        time = time.truncatedTo(ChronoUnit.MINUTES);
+        if (time.isAfter(OffsetDateTime.now().plus(THRESHOLD))) {
+            schedule(id, message, time);
+        } else {
+            send(id, message);
+        }
+    }
+    
+    private void schedule(Long id, String message, OffsetDateTime time) {
         repository.store(id, message, time);
         scheduler.schedule(this::remind, time);
     }
@@ -48,7 +61,7 @@ public class Reminder {
     private void reschedule(OffsetDateTime time) {
         Optional<OffsetDateTime> next = repository.findNext(time);
         if (next.isPresent()) {
-            scheduler.reset(this::remind, time);
+            scheduler.reset(this::remind, next.get());
         }
         log.info("Reschedule to {}", next);
     }
