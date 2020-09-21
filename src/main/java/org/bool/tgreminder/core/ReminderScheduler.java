@@ -38,11 +38,10 @@ public class ReminderScheduler {
         ScheduledFuture<?> future = scheduleTask(task, time);
         ScheduledFuture<?> old = ref.getAndAccumulate(future, this::min);
         if (old != null) {
-            ScheduledFuture<?> toCancel = max(future, old);
-            toCancel.cancel(false);
-            if (toCancel != future) {
-                log.info("Schedule to {}", time);
-            }
+            max(future, old).cancel(false);
+        }
+        if (ref.get() == future) {
+            log.info("Schedule to {}", time);
         }
     }
     
