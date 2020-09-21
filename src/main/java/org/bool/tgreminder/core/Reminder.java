@@ -59,9 +59,11 @@ public class Reminder {
     }
     
     private void reschedule(OffsetDateTime time) {
-        Optional<OffsetDateTime> next = repository.findNext(time);
-        if (next.isPresent()) {
-            scheduler.reset(this::remind, next.get());
+        OffsetDateTime next = repository.findNext(time).orElse(null);
+        if (next != null) {
+            scheduler.reset(this::remind, next);
+        } else {
+            scheduler.reset();
         }
         log.info("Reschedule to {}", next);
     }

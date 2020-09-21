@@ -34,6 +34,10 @@ public class ReminderScheduler {
         ref.set(scheduleTask(task, time));
     }
     
+    public void reset() {
+        ref.set(null);
+    }
+    
     public void schedule(Consumer<OffsetDateTime> task, OffsetDateTime time) {
         ScheduledFuture<?> future = scheduleTask(task, time);
         ScheduledFuture<?> old = ref.getAndAccumulate(future, this::min);
