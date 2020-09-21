@@ -1,7 +1,6 @@
 package org.bool.tgreminder.core;
 
 import org.bool.tgreminder.dto.ReminderDto;
-import org.springframework.dao.support.DataAccessUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,7 @@ public class Repository {
     }
     
     public void queryByTime(OffsetDateTime time, BiConsumer<Long, String> handler) {
-        jdbcTemplate.query("select * from REMINDERS where TIME = ?)", (ResultSet rs) -> handler.accept(rs.getLong("USER_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
+        jdbcTemplate.query("select * from REMINDERS where TIME = ?", (ResultSet rs) -> handler.accept(rs.getLong("USER_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
     }
     
     public Optional<OffsetDateTime> findNext(OffsetDateTime time) {
