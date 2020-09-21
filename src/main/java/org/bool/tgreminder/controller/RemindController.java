@@ -3,6 +3,8 @@ package org.bool.tgreminder.controller;
 import org.bool.tgreminder.dto.ReminderDto;
 import org.bool.tgreminder.service.RemindService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +33,7 @@ public class RemindController {
     }
     
     @PostMapping("{userId}")
-    public void remind(@PathVariable("userId") Long userId, @RequestParam("time") OffsetDateTime time, @RequestBody String request) {
+    public void remind(@PathVariable("userId") Long userId, @RequestParam("time") @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime time, @RequestBody String request) {
         remindService.remind(userId, request, time);
     }
     
