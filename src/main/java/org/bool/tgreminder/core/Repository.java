@@ -28,8 +28,7 @@ public class Repository {
     }
     
     public Optional<OffsetDateTime> findNext(OffsetDateTime time) {
-        List<OffsetDateTime> values = jdbcTemplate.query("select MIN(TIME) from REMINDERS where TIME > ?", (rs, i) -> convertTime(rs.getTimestamp(1)), time);
-        return Optional.ofNullable(DataAccessUtils.singleResult(values));
+        return Optional.ofNullable(jdbcTemplate.queryForObject("select MIN(TIME) from REMINDERS where TIME > ?", (rs, i) -> convertTime(rs.getTimestamp(1)), time));
     }
     
     public List<ReminderDto> findByUserId(Long userId) {
@@ -54,6 +53,6 @@ public class Repository {
     }
     
     private OffsetDateTime convertTime(Timestamp timestamp) {
-        return OffsetDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC);
+        return timestamp != null ? OffsetDateTime.ofInstant(timestamp.toInstant(), ZoneOffset.UTC) : null;
     }
 }
