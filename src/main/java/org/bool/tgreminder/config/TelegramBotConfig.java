@@ -2,6 +2,7 @@ package org.bool.tgreminder.config;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
+import com.pengrad.telegrambot.request.DeleteWebhook;
 import com.pengrad.telegrambot.request.SetWebhook;
 import com.pengrad.telegrambot.response.BaseResponse;
 
@@ -17,6 +18,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 @Configuration
 public class TelegramBotConfig {
     
@@ -28,16 +32,32 @@ public class TelegramBotConfig {
     private String webhook;
     
     @Autowired
-    private UpdateToken token;
+    private TelegramBot telegramBot;
     
     @Autowired
-    public void configureUpdates(TelegramBot telegramBot, UpdatesListener listener) {
+    private UpdatesListener updatesListener;
+    
+    @Autowired
+    private UpdateToken token;
+    
+    @PostConstruct
+    public void configureUpdates() {
         if (StringUtils.isNotBlank(webhook)) {
             BaseResponse response = telegramBot.execute(new SetWebhook().allowedUpdates(UPDATE_TYPES).url(webhook + "?key=" + token));
             Validate.validState(response.isOk(), "Webhook %s registration error: %s", webhook, response);
             log.info("Webhook {} registered: {}", webhook, response);
         } else {
-            telegramBot.setUpdatesListener(listener);
+            telegramBot.setUpdatesListener(updatesListener);
+        }
+    }
+    
+    @PreDestroy
+    public void deleteWebhook() {
+        BaseResponse response = telegramBot.execute(new DeleteWebhook());
+        if (response.isOk()) {
+            log.info("Webhook removed: {}", response);
+        } else {
+            log.error("Error remove webhook: {}", response);
         }
     }
     
