@@ -30,8 +30,10 @@ public class UpdateService {
     public void update(String key, Update update) {
         log.info("Update {} {}", key, update);
         if (updateToken.getValue().equals(key)) {
-            ReminderDto message = messageParser.parse(update.message().text());
-            reminder.remind(update.message().chat().id(), message.getMessage(), message.getTime());
+            if (update != null && update.message() != null) {
+                ReminderDto message = messageParser.parse(update.message().text());
+                reminder.remind(update.message().chat().id(), message.getMessage(), message.getTime());
+            }
         } else {
             log.warn("Invalid key: {}", key);
         }

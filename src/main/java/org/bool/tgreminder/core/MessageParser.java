@@ -11,6 +11,9 @@ public class MessageParser {
 
     public ReminderDto parse(String text) {
         String[] parts = StringUtils.splitByWholeSeparator(text, " ", 3);
+        if (parts == null || parts.length < 1) {
+            return instantMessage("Empty request");
+        }
         
         if ("/start".equals(parts[0])) {
             return instantMessage("Hello!");
