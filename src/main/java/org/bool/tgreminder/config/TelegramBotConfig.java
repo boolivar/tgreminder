@@ -7,12 +7,15 @@ import com.pengrad.telegrambot.response.BaseResponse;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.bool.tgreminder.core.UpdateToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.UUID;
 
 @Configuration
 public class TelegramBotConfig {
@@ -25,14 +28,22 @@ public class TelegramBotConfig {
     private String webhook;
     
     @Autowired
+    private UpdateToken token;
+    
+    @Autowired
     public void configureUpdates(TelegramBot telegramBot, UpdatesListener listener) {
         if (StringUtils.isNotBlank(webhook)) {
-            BaseResponse response = telegramBot.execute(new SetWebhook().allowedUpdates(UPDATE_TYPES).url(webhook));
+            BaseResponse response = telegramBot.execute(new SetWebhook().allowedUpdates(UPDATE_TYPES).url(webhook + "?key=" + token));
             Validate.validState(response.isOk(), "Webhook %s registration error: %s", webhook, response);
             log.info("Webhook {} registered: {}", webhook, response);
         } else {
             telegramBot.setUpdatesListener(listener);
         }
+    }
+    
+    @Bean
+    public UUID webhookKey() {
+        return UUID.randomUUID();
     }
     
     @Configuration
