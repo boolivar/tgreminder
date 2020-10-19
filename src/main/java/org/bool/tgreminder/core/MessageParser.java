@@ -8,7 +8,13 @@ import java.time.OffsetDateTime;
 
 @Component
 public class MessageParser {
-
+    
+    private final DateTimeParser dateTimeParser;
+    
+    public MessageParser(DateTimeParser dateTimeParser) {
+        this.dateTimeParser = dateTimeParser;
+    }
+    
     public ReminderDto parse(String text) {
         String[] parts = StringUtils.splitByWholeSeparator(text, " ", 3);
         if (parts == null || parts.length < 1) {
@@ -25,7 +31,7 @@ public class MessageParser {
             }
             
             try {
-                return new ReminderDto(OffsetDateTime.parse(parts[1]), parts[2]);
+                return new ReminderDto(dateTimeParser.parse(parts[1]), parts[2]);
             } catch (RuntimeException e) {
                 return instantMessage("Invalid request param");
             }
