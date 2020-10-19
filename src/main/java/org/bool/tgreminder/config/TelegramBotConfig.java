@@ -2,7 +2,6 @@ package org.bool.tgreminder.config;
 
 import com.pengrad.telegrambot.TelegramBot;
 import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.request.DeleteWebhook;
 import com.pengrad.telegrambot.request.SetWebhook;
 import com.pengrad.telegrambot.response.BaseResponse;
 
@@ -16,10 +15,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.UUID;
-
 import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 
 @Configuration
 public class TelegramBotConfig {
@@ -49,21 +45,6 @@ public class TelegramBotConfig {
         } else {
             telegramBot.setUpdatesListener(updatesListener);
         }
-    }
-    
-    @PreDestroy
-    public void deleteWebhook() {
-        BaseResponse response = telegramBot.execute(new DeleteWebhook());
-        if (response.isOk()) {
-            log.info("Webhook removed: {}", response);
-        } else {
-            log.error("Error remove webhook: {}", response);
-        }
-    }
-    
-    @Bean
-    public UUID webhookKey() {
-        return UUID.randomUUID();
     }
     
     @Configuration
