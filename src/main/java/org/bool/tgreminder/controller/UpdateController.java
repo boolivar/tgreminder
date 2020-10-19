@@ -2,9 +2,7 @@ package org.bool.tgreminder.controller;
 
 import com.pengrad.telegrambot.model.Update;
 
-import org.bool.tgreminder.core.UpdateToken;
 import org.bool.tgreminder.service.UpdateService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,15 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(path = "api/update")
 public class UpdateController {
     
-    @Autowired
-    private UpdateService updateService;
+    private final UpdateService updateService;
     
-    @Autowired
-    private UpdateToken token;
-
+    public UpdateController(UpdateService updateService) {
+        this.updateService = updateService;
+    }
+    
     @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public void update(@RequestParam("key") String key, @RequestBody Update update) {
-        updateService.update(token.getValue(), update);
+        updateService.update(key, update);
     }
 }
