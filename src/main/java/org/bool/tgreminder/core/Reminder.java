@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -27,20 +28,23 @@ public class Reminder {
     
     private final TelegramBot telegramBot;
     
-    public Reminder(ReminderScheduler scheduler, Repository repository, TelegramBot telegramBot) {
+    private final Clock clock;
+    
+    public Reminder(ReminderScheduler scheduler, Repository repository, TelegramBot telegramBot, Clock clock) {
         this.scheduler = scheduler;
         this.repository = repository;
         this.telegramBot = telegramBot;
+        this.clock = clock;
     }
     
     @PostConstruct
     public void reschedule() {
-        reschedule(OffsetDateTime.now());
+        reschedule(OffsetDateTime.now(clock));
     }
     
     public void remind(Long id, String message, OffsetDateTime time) {
         time = time.truncatedTo(ChronoUnit.MINUTES);
-        if (time.isAfter(OffsetDateTime.now().plus(THRESHOLD))) {
+        if (time.isAfter(OffsetDateTime.now(clock).plus(THRESHOLD))) {
             schedule(id, message, time);
         } else {
             send(id, message);
