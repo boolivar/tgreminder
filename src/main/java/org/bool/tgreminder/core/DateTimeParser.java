@@ -1,7 +1,9 @@
 package org.bool.tgreminder.core;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -19,7 +21,10 @@ public class DateTimeParser {
     
     private final ZoneOffset defaultOffset;
     
-    public DateTimeParser() {
+    private final Clock clock;
+    
+    @Autowired
+    public DateTimeParser(Clock clock) {
         this(new DateTimeFormatterBuilder()
             .optionalStart()
                 .append(DateTimeFormatter.ISO_LOCAL_DATE).appendLiteral('T')
@@ -28,12 +33,13 @@ public class DateTimeParser {
             .optionalStart()
                 .appendOffset("+HH:mm", "Z")
             .optionalEnd()
-            .toFormatter(), ZoneOffset.ofHours(3));
+            .toFormatter(), ZoneOffset.ofHours(3), clock);
     }
 
-    public DateTimeParser(DateTimeFormatter formatter, ZoneOffset defaultOffset) {
+    public DateTimeParser(DateTimeFormatter formatter, ZoneOffset defaultOffset, Clock clock) {
         this.formatter = formatter;
         this.defaultOffset = defaultOffset;
+        this.clock = clock;
     }
     
     public OffsetDateTime parse(String text) {
@@ -45,8 +51,8 @@ public class DateTimeParser {
             return ((LocalDateTime) value).atOffset(defaultOffset);
         }
         if (value instanceof OffsetTime) {
-            return ((OffsetTime) value).atDate(LocalDate.now());
+            return ((OffsetTime) value).atDate(LocalDate.now(clock.withZone(((OffsetTime) value).getOffset())));
         }
-        return ((LocalTime) value).atDate(LocalDate.now()).atOffset(defaultOffset);
+        return ((LocalTime) value).atDate(LocalDate.now(clock.withZone(defaultOffset))).atOffset(defaultOffset);
     }
 }
