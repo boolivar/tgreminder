@@ -9,3 +9,5 @@ spring:
     password: ${JDBC_DATABASE_PASSWORD}
   jackson.visibility:
     FIELD: ANY
+  messages:
+    useCodeAsDefaultMessage: true
