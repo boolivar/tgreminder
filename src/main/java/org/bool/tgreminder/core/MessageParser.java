@@ -40,7 +40,7 @@ public class MessageParser {
             }
             
             try {
-                return new ReminderDto(dateTimeParser.parse(parts[1]), parts[2]);
+                return new ReminderDto(null, dateTimeParser.parse(parts[1]), parts[2]);
             } catch (RuntimeException e) {
                 return instantMessage(Messages.INVALID_TIME_FORMAT);
             }
@@ -51,6 +51,6 @@ public class MessageParser {
     
     private ReminderDto instantMessage(Messages message, String... args) {
         String text = messageResolver.getMessage(message, args);
-        return new ReminderDto(OffsetDateTime.now(clock), text);
+        return new ReminderDto(null, OffsetDateTime.now(), text);
     }
 }

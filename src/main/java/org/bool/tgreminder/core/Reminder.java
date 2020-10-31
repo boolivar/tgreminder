@@ -42,17 +42,17 @@ public class Reminder {
         reschedule(OffsetDateTime.now(clock));
     }
     
-    public void remind(Long id, String message, OffsetDateTime time) {
+    public void remind(Long userId, Long chatId, String message, OffsetDateTime time) {
         time = time.truncatedTo(ChronoUnit.MINUTES);
         if (time.isAfter(OffsetDateTime.now(clock).plus(THRESHOLD))) {
-            schedule(id, message, time);
+            schedule(userId, chatId, message, time);
         } else {
-            send(id, message);
+            send(chatId, message);
         }
     }
     
-    private void schedule(Long id, String message, OffsetDateTime time) {
-        repository.store(id, message, time);
+    private void schedule(Long userId, Long chatId, String message, OffsetDateTime time) {
+        repository.store(userId, chatId, message, time);
         scheduler.schedule(this::remind, time);
     }
     

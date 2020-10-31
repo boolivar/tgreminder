@@ -27,18 +27,18 @@ public class RemindController {
     @Autowired
     private RemindService remindService;
     
-    @GetMapping("{userId}")
-    public List<ReminderDto> list(@PathVariable("userId") Long userId) {
-        return remindService.list(userId);
+    @GetMapping("{userId}/{chatId}")
+    public List<ReminderDto> list(@PathVariable("userId") Long userId, @PathVariable("chatId") Long chatId) {
+        return remindService.list(userId, chatId);
     }
     
-    @PostMapping("{userId}")
-    public void remind(@PathVariable("userId") Long userId, @RequestParam("time") @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime time, @RequestBody String request) {
-        remindService.remind(userId, request, time);
+    @PostMapping("{userId}/{chatId}")
+    public void remind(@PathVariable("userId") Long userId, @PathVariable("chatId") Long chatId, @RequestParam("time") @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime time, @RequestBody String request) {
+        remindService.remind(userId, chatId, request, time);
     }
     
-    @DeleteMapping("{userId}/{index}")
-    public void cancel(@PathVariable("userId") Long userId, @PathVariable(name = "index", required = false) Integer index) {
-        remindService.cancel(userId, index);
+    @DeleteMapping("{userId}/{chatId}/{index}")
+    public void cancel(@PathVariable("userId") Long userId, @PathVariable("chatId") Long chatId, @PathVariable(name = "index", required = false) Integer index) {
+        remindService.cancel(userId, chatId, index);
     }
 }

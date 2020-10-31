@@ -23,32 +23,36 @@ public class Repository {
     }
     
     public void queryByTime(OffsetDateTime time, BiConsumer<Long, String> handler) {
-        jdbcTemplate.query("select * from REMINDERS where TIME = ?", (ResultSet rs) -> handler.accept(rs.getLong("USER_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
+        jdbcTemplate.query("select * from REMINDERS where TIME = ?", (ResultSet rs) -> handler.accept(rs.getLong("CHAT_ID"), rs.getString("MESSAGE")), Timestamp.from(time.toInstant()));
     }
     
     public Optional<OffsetDateTime> findNext(OffsetDateTime time) {
         return Optional.ofNullable(jdbcTemplate.queryForObject("select MIN(TIME) from REMINDERS where TIME > ?", (rs, i) -> convertTime(rs.getTimestamp(1)), time));
     }
     
-    public List<ReminderDto> findByUserId(Long userId) {
-        return jdbcTemplate.query("select * from REMINDERS where USER_ID = ? order by TIME, ID", this::mapDto, userId);
+    public List<ReminderDto> findByChatId(Long chatId) {
+        return jdbcTemplate.query("select * from REMINDERS where CHAT_ID = ? order by TIME, ID", this::mapDto, chatId);
     }
     
-    public void store(Long userId, String message, OffsetDateTime time) {
-        jdbcTemplate.update("insert into REMINDERS(ID, USER_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), ?, ?, ?)",
-                userId, message, Timestamp.from(time.toInstant()));
+    public List<ReminderDto> find(Long userId, Long chatId) {
+        return jdbcTemplate.query("select * from REMINDERS where USER_ID = ? and CHAT_ID = ? order by TIME, ID", this::mapDto, userId, chatId);
     }
     
-    public int delete(Long userId, Integer index) {
-        return jdbcTemplate.update("delete from REMINDERS where ID = (select ID from (select ID, row_number() over (order by TIME, ID) RN from REMINDERS where USER_ID = ?) where RN = ?)", userId, index);
+    public void store(Long userId, Long chatId, String message, OffsetDateTime time) {
+        jdbcTemplate.update("insert into REMINDERS(ID, CHAT_INDEX, USER_ID, CHAT_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), (select count(*) from REMINDERS where CHAT_ID = ?) + 1, ?, ?, ?, ?)",
+                chatId, userId, chatId, message, Timestamp.from(time.toInstant()));
     }
     
-    public int deleteAll(Long userId) {
-        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ?", userId);
+    public int delete(Long userId, Long chatId, Integer chatIndex) {
+        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ? and CHAT_ID = ? and CHAT_INDEX = ?)", userId, chatId, chatIndex);
+    }
+    
+    public int deleteAll(Long userId, Long chatId) {
+        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ? and CHAT_ID = ?", userId, chatId);
     }
     
     private ReminderDto mapDto(ResultSet rs, int index) throws SQLException {
-        return new ReminderDto(convertTime(rs.getTimestamp("TIME")), rs.getString("MESSAGE"));
+        return new ReminderDto(rs.getInt("CHAT_INDEX"), convertTime(rs.getTimestamp("TIME")), rs.getString("MESSAGE"));
     }
     
     private OffsetDateTime convertTime(Timestamp timestamp) {

@@ -20,19 +20,19 @@ public class RemindService {
         this.repository = repository;
     }
     
-    public void remind(Long userId, String message, OffsetDateTime time) {
-        reminder.remind(userId, message, time);
+    public void remind(Long userId, Long chatId, String message, OffsetDateTime time) {
+        reminder.remind(userId, chatId, message, time);
     }
 
-    public List<ReminderDto> list(Long userId) {
-        return repository.findByUserId(userId);
+    public List<ReminderDto> list(Long userId, Long chatId) {
+        return repository.findByChatId(chatId);
     }
 
-    public void cancel(Long userId, Integer index) {
-        if (index != null) {
-            repository.delete(userId, index);
+    public void cancel(Long userId, Long chatId, Integer chatIndex) {
+        if (chatIndex != null) {
+            repository.delete(userId, chatId, chatIndex);
         } else {
-            repository.deleteAll(userId);
+            repository.deleteAll(userId, chatId);
         }
     }
 }
