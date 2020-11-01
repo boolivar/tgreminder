@@ -44,7 +44,7 @@ public class Repository {
     }
     
     public int delete(Long userId, Long chatId, Integer chatIndex) {
-        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ? and CHAT_ID = ? and CHAT_INDEX = ?)", userId, chatId, chatIndex);
+        return jdbcTemplate.update("delete from REMINDERS where USER_ID = ? and CHAT_ID = ? and CHAT_INDEX = ?", userId, chatId, chatIndex);
     }
     
     public int deleteAll(Long userId, Long chatId) {
