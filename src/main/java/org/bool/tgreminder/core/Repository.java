@@ -43,6 +43,10 @@ public class Repository {
                 chatId, userId, chatId, message, Timestamp.from(time.toInstant()));
     }
     
+    public int delete(Long chatId, Integer chatIndex) {
+        return jdbcTemplate.update("delete from REMINDERS where CHAT_ID = ? and CHAT_INDEX = ?", chatId, chatIndex);
+    }
+    
     public int delete(Long userId, Long chatId, Integer chatIndex) {
         return jdbcTemplate.update("delete from REMINDERS where USER_ID = ? and CHAT_ID = ? and CHAT_INDEX = ?", userId, chatId, chatIndex);
     }
