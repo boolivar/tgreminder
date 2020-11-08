@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -35,7 +36,7 @@ class RepositoryIT {
             .isEqualTo(0);
         
         BiConsumer<Long, String> handler = Mockito.mock(BiConsumer.class);
-        repository.queryByTime(OffsetDateTime.MIN, handler);
+        repository.queryByTime(Instant.EPOCH.atOffset(ZoneOffset.UTC), handler);
         Mockito.verifyNoInteractions(handler);
     }
     
