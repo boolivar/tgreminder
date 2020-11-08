@@ -1,20 +1,29 @@
 package org.bool.tgreminder.core;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Transactional
 @SpringBootTest
 class RepositoryIT {
 
@@ -39,7 +48,8 @@ class RepositoryIT {
         repository.queryByTime(Instant.EPOCH.atOffset(ZoneOffset.UTC), handler);
         Mockito.verifyNoInteractions(handler);
     }
-    
+
+    @Transactional
     @Test
     void testStore() {
         repository.store(5L, 5L, "test1", time("2001-01-01T01:30"));
@@ -79,13 +89,14 @@ class RepositoryIT {
                     .matches(r -> "b".equals(r.getMessage()))
                     .matches(r -> r.getChatIndex() == 2);
         
-        assertThat(repository.delete(5L, 5L, 2))
+        assertThat(repository.delete(5L, 2))
                 .isEqualTo(1);
         
         assertThat(repository.findByChatId(5L))
                 .isEmpty();
     }
     
+    @Transactional
     @Test
     void testQueryByTime() {
         repository.store(5L, 5L, "ONE", time("2005-05-05T03:30"));
@@ -97,6 +108,35 @@ class RepositoryIT {
         
         Mockito.verify(handler).accept(5L, "ONE");
         Mockito.verify(handler).accept(6L, "TWO");
+    }
+    
+    @Tag("load")
+    @Test
+    void testLoad() throws InterruptedException, ExecutionException {
+        ExecutorService executor = Executors.newCachedThreadPool();
+        
+        List<Callable<Void>> tasks = IntStream.range(0, 32)
+                .mapToObj(Long::valueOf)
+                .<Callable<Void>>map(userId -> () -> {
+                    for (int i = 0; i < 1000; ++i) {
+                        repository.store(userId, 3L, "test", OffsetDateTime.now());
+                    }
+                    return null;
+                })
+                .collect(Collectors.toList());
+        
+        for (Future<?> result : executor.invokeAll(tasks)) {
+            result.get();
+        }
+        
+        assertThat(repository.delete(3L, 32001))
+                .isEqualTo(0);
+        assertThat(repository.delete(3L, 32000))
+                .isEqualTo(1);
+        
+        for (long i = 0; i < 16; ++i) {
+            repository.deleteAll(i, 3L);
+        }
     }
     
     private OffsetDateTime time(String text) {
