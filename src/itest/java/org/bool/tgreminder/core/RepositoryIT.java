@@ -1,11 +1,15 @@
 package org.bool.tgreminder.core;
 
+import org.bool.tgreminder.dto.ReminderDto;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -14,19 +18,20 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
+@Transactional
 @SpringBootTest
 class RepositoryIT {
-
+    
     @Autowired
     private Repository repository;
     
@@ -48,8 +53,7 @@ class RepositoryIT {
         repository.queryByTime(Instant.EPOCH.atOffset(ZoneOffset.UTC), handler);
         Mockito.verifyNoInteractions(handler);
     }
-
-    @Transactional
+    
     @Test
     void testStore() {
         repository.store(5L, 5L, "test1", time("2001-01-01T01:30"));
@@ -58,15 +62,13 @@ class RepositoryIT {
         assertThat(repository.find(5L, 5L))
                 .hasSize(1)
                 .element(0)
-                    .matches(r -> "test1".equals(r.getMessage()))
-                    .matches(r -> r.getChatIndex() == 1);
+                .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
+                .contains("test1", 1);
         
         assertThat(repository.findByChatId(5L))
                 .hasSize(2)
-                .matches(rs -> "test1".equals(rs.get(0).getMessage()))
-                .matches(rs -> "test2".equals(rs.get(1).getMessage()))
-                .matches(rs -> rs.get(0).getChatIndex() == 1)
-                .matches(rs -> rs.get(1).getChatIndex() == 2);
+                .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
+                .contains(tuple("test1", 1), tuple("test2", 2));
         
         assertThat(repository.findNext(time("2000-12-31T23:30")))
                 .contains(time("2001-01-01T01:30"));
@@ -86,8 +88,8 @@ class RepositoryIT {
         assertThat(repository.findByChatId(5L))
                 .hasSize(1)
                 .element(0)
-                    .matches(r -> "b".equals(r.getMessage()))
-                    .matches(r -> r.getChatIndex() == 2);
+                .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
+                .contains("b", 2);
         
         assertThat(repository.delete(5L, 2))
                 .isEqualTo(1);
@@ -96,7 +98,6 @@ class RepositoryIT {
                 .isEmpty();
     }
     
-    @Transactional
     @Test
     void testQueryByTime() {
         repository.store(5L, 5L, "ONE", time("2005-05-05T03:30"));
@@ -110,32 +111,36 @@ class RepositoryIT {
         Mockito.verify(handler).accept(6L, "TWO");
     }
     
-    @Tag("load")
-    @Test
-    void testLoad() throws InterruptedException, ExecutionException {
-        ExecutorService executor = Executors.newCachedThreadPool();
+    @Nested
+    class ConcurrentIT {
+    
+        private final ExecutorService executor = Executors.newCachedThreadPool();
         
-        List<Callable<Void>> tasks = IntStream.range(0, 32)
-                .mapToObj(Long::valueOf)
-                .<Callable<Void>>map(userId -> () -> {
-                    for (int i = 0; i < 1000; ++i) {
-                        repository.store(userId, 3L, "test", OffsetDateTime.now());
-                    }
-                    return null;
-                })
-                .collect(Collectors.toList());
-        
-        for (Future<?> result : executor.invokeAll(tasks)) {
-            result.get();
+        @AfterEach
+        void shutdownExecutor() {
+            executor.shutdown();
         }
         
-        assertThat(repository.delete(3L, 32001))
-                .isEqualTo(0);
-        assertThat(repository.delete(3L, 32000))
-                .isEqualTo(1);
-        
-        for (long i = 0; i < 16; ++i) {
-            repository.deleteAll(i, 3L);
+        @CsvSource({"10, 10"})
+        @ParameterizedTest
+        void testChatIndexIncrement(int threadCount, int recordCount) throws Exception {
+            List<Callable<Void>> tasks = LongStream.range(0, threadCount)
+                    .<Callable<Void>>mapToObj(userId -> () -> {
+                        for (int i = 0; i < recordCount; ++i) {
+                            repository.store(userId, 3L, "test", OffsetDateTime.now());
+                        }
+                        return null;
+                    })
+                    .collect(Collectors.toList());
+            
+            for (Future<?> result : executor.invokeAll(tasks)) {
+                result.get();
+            }
+            
+            assertThat(repository.delete(3L, threadCount * recordCount + 1))
+                    .isEqualTo(0);
+            assertThat(repository.delete(3L, threadCount * recordCount))
+                    .isEqualTo(1);
         }
     }
     
