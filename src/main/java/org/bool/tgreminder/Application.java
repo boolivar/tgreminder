@@ -1,5 +1,6 @@
 package org.bool.tgreminder;
 
+import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -18,5 +19,10 @@ public class Application {
     @Bean
     public Clock clock() {
         return Clock.systemUTC();
+    }
+    
+    @Bean
+    public DefaultAdvisorAutoProxyCreator advisorAutoProxyCreator() {
+        return new DefaultAdvisorAutoProxyCreator();
     }
 }

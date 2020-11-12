@@ -38,6 +38,7 @@ public class Repository {
         return jdbcTemplate.query("select * from REMINDERS where USER_ID = ? and CHAT_ID = ? order by TIME, ID", this::mapDto, userId, chatId);
     }
     
+    @BucketKey("chatId")
     public void store(Long userId, Long chatId, String message, OffsetDateTime time) {
         jdbcTemplate.update("insert into REMINDERS(ID, CHAT_INDEX, USER_ID, CHAT_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), (select coalesce(max(CHAT_INDEX), 0) + 1 from REMINDERS where CHAT_ID = ?), ?, ?, ?, ?)",
                 chatId, userId, chatId, message, Timestamp.from(time.toInstant()));
