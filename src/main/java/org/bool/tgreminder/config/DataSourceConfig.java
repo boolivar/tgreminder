@@ -2,8 +2,10 @@ package org.bool.tgreminder.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 
-import org.bool.tgreminder.core.ThreadLocalTargetSource;
+import org.bool.tgreminder.core.BucketKeyAdvice;
+import org.bool.tgreminder.core.LocalKeyTargetSource;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -29,6 +31,9 @@ public class DataSourceConfig implements BeanPostProcessor {
     private DataSourceProperties dataSourceProperties;
     
     @Autowired
+    private BucketKeyAdvice bucketKeyAdvice;
+    
+    @Autowired
     private ConfigurableApplicationContext context;
     
     public Object postProcessAfterInitialization(Object bean, String beanName) {
@@ -44,11 +49,11 @@ public class DataSourceConfig implements BeanPostProcessor {
             
             List<DataSource> targets = Stream.concat(Stream.of(dataSource), bucketDataSources).collect(Collectors.toList());
             
-            return ProxyFactory.getProxy(DataSource.class, new ThreadLocalTargetSource<>(DataSource.class, targets));
+            return ProxyFactory.getProxy(DataSource.class, new LocalKeyTargetSource<>(DataSource.class, targets, bucketKeyAdvice::getKey));
         }
         return bean;
     }
-
+    
     @Primary
     @Bean
     @ConfigurationProperties("spring.datasource.hikari")
