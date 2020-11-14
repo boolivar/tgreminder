@@ -31,14 +31,16 @@ import static org.assertj.core.api.Assertions.tuple;
 @SpringBootTest
 class RepositoryIT {
     
+    private static final OffsetDateTime EPOCH_TIME = Instant.EPOCH.atOffset(ZoneOffset.UTC);
+    
     @Autowired
     private Repository repository;
     
     @Test
     void testEmpty() {
-        assertThat(repository.findByChatId(5L))
+        assertThat(repository.findByChatId(5L, OffsetDateTime.MIN))
             .isEmpty();
-        assertThat(repository.find(5L, 5L))
+        assertThat(repository.find(5L, 5L, OffsetDateTime.MIN))
             .isEmpty();
         assertThat(repository.findNext(OffsetDateTime.MIN))
             .isEmpty();
@@ -49,7 +51,7 @@ class RepositoryIT {
             .isEqualTo(0);
         
         BiConsumer<Long, String> handler = Mockito.mock(BiConsumer.class);
-        repository.queryByTime(Instant.EPOCH.atOffset(ZoneOffset.UTC), handler);
+        repository.queryByTime(EPOCH_TIME, handler);
         Mockito.verifyNoInteractions(handler);
     }
     
@@ -58,13 +60,13 @@ class RepositoryIT {
         repository.store(5L, 5L, "test1", time("2001-01-01T01:30"));
         repository.store(7L, 5L, "test2", time("2002-02-02T02:30"));
         
-        assertThat(repository.find(5L, 5L))
+        assertThat(repository.find(5L, 5L, EPOCH_TIME))
                 .hasSize(1)
                 .element(0)
                 .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
                 .contains("test1", 1);
         
-        assertThat(repository.findByChatId(5L))
+        assertThat(repository.findByChatId(5L, EPOCH_TIME))
                 .hasSize(2)
                 .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
                 .contains(tuple("test1", 1), tuple("test2", 2));
@@ -78,13 +80,13 @@ class RepositoryIT {
         repository.store(5L, 5L, "a", time("2002-02-03T22:30"));
         repository.store(5L, 5L, "b", time("2002-02-03T23:30"));
         
-        assertThat(repository.findByChatId(5L))
+        assertThat(repository.findByChatId(5L, EPOCH_TIME))
                 .hasSize(2);
         
         assertThat(repository.delete(5L, 5L, 1))
                 .isEqualTo(1);
         
-        assertThat(repository.findByChatId(5L))
+        assertThat(repository.findByChatId(5L, EPOCH_TIME))
                 .hasSize(1)
                 .element(0)
                 .extracting(ReminderDto::getMessage, ReminderDto::getChatIndex)
@@ -93,7 +95,7 @@ class RepositoryIT {
         assertThat(repository.delete(5L, 2))
                 .isEqualTo(1);
         
-        assertThat(repository.findByChatId(5L))
+        assertThat(repository.findByChatId(5L, EPOCH_TIME))
                 .isEmpty();
     }
     
