@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.bool.tgreminder.core.BucketKeyAdvice;
 import org.bool.tgreminder.core.LocalKeyTargetSource;
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
