@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.stream.Collectors;
 
 @Component
 public class MessageParser {
@@ -16,15 +17,18 @@ public class MessageParser {
     
     private final MessageResolver messageResolver;
     
+    private final Repository repository;
+    
     private final Clock clock;
     
-    public MessageParser(DateTimeParser dateTimeParser, MessageResolver messageResolver, Clock clock) {
+    public MessageParser(DateTimeParser dateTimeParser, MessageResolver messageResolver, Repository repository, Clock clock) {
         this.dateTimeParser = dateTimeParser;
         this.messageResolver = messageResolver;
+        this.repository = repository;
         this.clock = clock;
     }
     
-    public ReminderDto parse(String text) {
+    public ReminderDto parse(Long chatId, String text) {
         String[] parts = StringUtils.splitByWholeSeparator(text, " ", 3);
         if (parts == null || parts.length < 1) {
             return instantMessage(Messages.EMPTY_REQUEST);
@@ -32,6 +36,13 @@ public class MessageParser {
         
         if ("/start".equals(parts[0])) {
             return instantMessage(Messages.HELLO);
+        }
+        
+        if ("/list".equals(parts[0])) {
+            String message = repository.findByChatId(chatId, OffsetDateTime.now(clock)).stream()
+                    .map(r -> StringUtils.joinWith(" ", r.getChatIndex(), r.getTime(), StringUtils.abbreviate(r.getMessage(), 16)))
+                    .collect(Collectors.joining("\n"));
+            return instantMessage(message);
         }
         
         if ("/remind".equals(parts[0])) {
@@ -51,6 +62,10 @@ public class MessageParser {
     
     private ReminderDto instantMessage(Messages message, String... args) {
         String text = messageResolver.getMessage(message, args);
+        return instantMessage(text);
+    }
+    
+    private ReminderDto instantMessage(String text) {
         return new ReminderDto(null, OffsetDateTime.now(clock), text);
     }
 }

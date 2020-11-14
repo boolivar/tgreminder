@@ -31,8 +31,10 @@ public class UpdateService {
         log.info("Update {} {}", key, update);
         if (updateToken.getValue().equals(key)) {
             if (update != null && update.message() != null) {
-                ReminderDto message = messageParser.parse(update.message().text());
-                reminder.remind(update.message().from().id().longValue(), update.message().chat().id(), message.getMessage(), message.getTime());
+                Long userId = update.message().from().id().longValue();
+                Long chatId = update.message().chat().id();
+                ReminderDto message = messageParser.parse(chatId, update.message().text());
+                reminder.remind(userId, chatId, message.getMessage(), message.getTime());
             }
         } else {
             log.warn("Invalid key: {}", key);
