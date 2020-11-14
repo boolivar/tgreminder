@@ -51,6 +51,6 @@ public class MessageParser {
     
     private ReminderDto instantMessage(Messages message, String... args) {
         String text = messageResolver.getMessage(message, args);
-        return new ReminderDto(null, OffsetDateTime.now(), text);
+        return new ReminderDto(null, OffsetDateTime.now(clock), text);
     }
 }
