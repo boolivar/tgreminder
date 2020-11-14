@@ -1,9 +1,5 @@
 package org.bool.tgreminder.core;
 
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.response.SendResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -26,14 +22,14 @@ public class Reminder {
     
     private final Repository repository;
     
-    private final TelegramBot telegramBot;
+    private final MessageSender messageSender;
     
     private final Clock clock;
     
-    public Reminder(ReminderScheduler scheduler, Repository repository, TelegramBot telegramBot, Clock clock) {
+    public Reminder(ReminderScheduler scheduler, Repository repository, MessageSender messageSender, Clock clock) {
         this.scheduler = scheduler;
         this.repository = repository;
-        this.telegramBot = telegramBot;
+        this.messageSender = messageSender;
         this.clock = clock;
     }
     
@@ -47,7 +43,7 @@ public class Reminder {
         if (time.isAfter(OffsetDateTime.now(clock).plus(THRESHOLD))) {
             schedule(userId, chatId, message, time);
         } else {
-            send(chatId, message);
+            messageSender.sendMessage(chatId, message);
         }
     }
     
@@ -57,7 +53,7 @@ public class Reminder {
     }
     
     private void remind(OffsetDateTime time) {
-        repository.queryByTime(time, this::send);
+        repository.queryByTime(time, messageSender::sendMessage);
         reschedule(time);
     }
     
@@ -69,13 +65,5 @@ public class Reminder {
             scheduler.reset();
         }
         log.info("Reschedule to {}", next);
-    }
-    
-    private void send(Long chatId, String message) {
-        SendResponse response = telegramBot.execute(new SendMessage(chatId, message));
-        if (!response.isOk()) {
-            log.error("Error sending message to {}: {} {} {}",
-                    chatId, response.errorCode(), response.description(), response.parameters());
-        }
     }
 }
