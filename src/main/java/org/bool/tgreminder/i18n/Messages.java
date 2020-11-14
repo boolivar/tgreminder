@@ -6,4 +6,5 @@ public enum Messages {
     INVALID_REQUEST,
     INVALID_TIME_FORMAT,
     UNKNOWN_COMMAND,
+    EMPTY_LIST,
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -39,10 +40,10 @@ public class MessageParser {
         }
         
         if ("/list".equals(parts[0])) {
-            String message = repository.findByChatId(chatId, OffsetDateTime.now(clock)).stream()
+            List<ReminderDto> reminders = repository.findByChatId(chatId, OffsetDateTime.now(clock));
+            return reminders.isEmpty() ? instantMessage(Messages.EMPTY_LIST) : instantMessage(reminders.stream()
                     .map(r -> StringUtils.joinWith(" ", r.getChatIndex(), r.getTime(), StringUtils.abbreviate(r.getMessage(), 16)))
-                    .collect(Collectors.joining("\n"));
-            return instantMessage(message);
+                    .collect(Collectors.joining("\n")));
         }
         
         if ("/remind".equals(parts[0])) {
