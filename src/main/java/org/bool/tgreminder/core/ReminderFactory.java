@@ -26,10 +26,14 @@ public class ReminderFactory {
     }
     
     public ReminderDto instantMessage(String text) {
-        return message(OffsetDateTime.now(clock), text);
+        return message(now(), text);
     }
     
     public ReminderDto message(OffsetDateTime time, String message) {
         return new ReminderDto(null, time, message);
+    }
+    
+    public OffsetDateTime now() {
+        return OffsetDateTime.now(clock);
     }
 }
