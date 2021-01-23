@@ -20,13 +20,12 @@ public class TimezoneHandler implements CommandHandler {
     @Override
     public ReminderDto handle(Long chatId, String[] args) {
         if ("/timezone".equals(args[0])) {
-            ZoneId timeZone = parse(args[1]);
-            return reminderFactory.instantMessage(Messages.TIMEZONE_UPDATED, timeZone.toString()); 
+            if (args.length > 2) {
+                return reminderFactory.instantMessage(Messages.INVALID_REQUEST);
+            }
+            ZoneId timeZone = args.length > 1 ? ZoneId.of(args[1]) : ZoneId.systemDefault();
+            return reminderFactory.instantMessage(Messages.TIMEZONE_UPDATED, timeZone.toString());
         }
         return null;
-    }
-
-    private ZoneId parse(String zoneId) {
-        return ZoneId.of(zoneId);
     }
 }
