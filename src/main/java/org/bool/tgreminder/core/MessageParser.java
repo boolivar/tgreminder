@@ -5,27 +5,19 @@ import org.bool.tgreminder.dto.ReminderDto;
 import org.bool.tgreminder.i18n.Messages;
 import org.springframework.stereotype.Component;
 
-import java.time.Clock;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Component
 public class MessageParser {
     
     private final ReminderFactory reminderFactory;
     
-    private final DateTimeParser dateTimeParser;
+    private final List<? extends CommandHandler> handlers;
     
-    private final Repository repository;
-    
-    private final Clock clock;
-    
-    public MessageParser(ReminderFactory reminderFactory, DateTimeParser dateTimeParser, Repository repository, Clock clock) {
+    public MessageParser(ReminderFactory reminderFactory, List<? extends CommandHandler> handlers) {
         this.reminderFactory = reminderFactory;
-        this.dateTimeParser = dateTimeParser;
-        this.repository = repository;
-        this.clock = clock;
+        this.handlers = handlers;
     }
     
     public ReminderDto parse(Long chatId, String text) {
@@ -33,34 +25,10 @@ public class MessageParser {
         if (parts == null || parts.length < 1) {
             return reminderFactory.instantMessage(Messages.EMPTY_REQUEST);
         }
-        
-        if ("/start".equals(parts[0])) {
-            return reminderFactory.instantMessage(Messages.HELLO);
-        }
-        
-        if ("/list".equals(parts[0])) {
-            List<ReminderDto> reminders = repository.findByChatId(chatId, OffsetDateTime.now(clock));
-            if (reminders.isEmpty()) {
-                return reminderFactory.instantMessage(Messages.EMPTY_LIST); 
-            }
-            String message = reminders.stream()
-                    .map(r -> StringUtils.joinWith(" ", r.getChatIndex(), r.getTime(), StringUtils.abbreviate(r.getMessage(), 16)))
-                    .collect(Collectors.joining("\n"));
-            return reminderFactory.instantMessage(message);
-        }
-        
-        if ("/remind".equals(parts[0])) {
-            if (parts.length != 3) {
-                return reminderFactory.instantMessage(Messages.INVALID_REQUEST);
-            }
-            
-            try {
-                return new ReminderDto(null, dateTimeParser.parse(parts[1]), parts[2]);
-            } catch (RuntimeException e) {
-                return reminderFactory.instantMessage(Messages.INVALID_TIME_FORMAT);
-            }
-        }
-        
-        return reminderFactory.instantMessage(Messages.UNKNOWN_COMMAND);
+        return handlers.stream()
+                .map(handler -> handler.handle(chatId, parts))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseGet(() -> reminderFactory.instantMessage(Messages.UNKNOWN_COMMAND));
     }
 }
