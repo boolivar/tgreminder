@@ -7,4 +7,5 @@ public enum Messages {
     INVALID_TIME_FORMAT,
     UNKNOWN_COMMAND,
     EMPTY_LIST,
+    TIMEZONE_UPDATED,
 }
