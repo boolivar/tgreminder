@@ -31,13 +31,19 @@ public class UpdateService {
         log.info("Update {} {}", key, update);
         if (updateToken.getValue().equals(key)) {
             if (update != null && update.message() != null) {
-                Long userId = update.message().from().id().longValue();
-                Long chatId = update.message().chat().id();
-                ReminderDto message = messageParser.parse(chatId, update.message().text());
-                reminder.remind(userId, chatId, message.getMessage(), message.getTime());
+                update(update.message().from().id(), update.message().chat().id(), update.message().text());
             }
         } else {
             log.warn("Invalid key: {}", key);
+        }
+    }
+    
+    private void update(Integer userId, Long chatId, String message) {
+        try {
+            ReminderDto response = messageParser.parse(chatId, message);
+            reminder.remind(userId.longValue(), chatId, response.getMessage(), response.getTime());
+        } catch (Exception e) {
+            log.error("Error handle message: {}", message, e);
         }
     }
 }
