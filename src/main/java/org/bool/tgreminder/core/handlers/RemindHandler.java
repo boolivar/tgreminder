@@ -20,7 +20,7 @@ public class RemindHandler implements CommandHandler {
     }
     
     @Override
-    public ReminderDto handle(Long chatId, String[] parts) {
+    public ReminderDto handle(Integer userId, Long chatId, String[] parts) {
         if ("/remind".equals(parts[0])) {
             if (parts.length != 3) {
                 return reminderFactory.instantMessage(Messages.INVALID_REQUEST);

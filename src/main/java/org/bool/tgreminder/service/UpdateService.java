@@ -40,7 +40,7 @@ public class UpdateService {
     
     private void update(Integer userId, Long chatId, String message) {
         try {
-            ReminderDto response = messageParser.parse(chatId, message);
+            ReminderDto response = messageParser.parse(userId, chatId, message);
             reminder.remind(userId.longValue(), chatId, response.getMessage(), response.getTime());
         } catch (Exception e) {
             log.error("Error handle message: {}", message, e);

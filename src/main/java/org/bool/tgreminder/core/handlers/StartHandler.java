@@ -16,7 +16,7 @@ public class StartHandler implements CommandHandler {
     }
     
     @Override
-    public ReminderDto handle(Long chatId, String[] args) {
+    public ReminderDto handle(Integer userId, Long chatId, String[] args) {
         if ("/start".equals(args[0])) {
             return reminderFactory.instantMessage(Messages.HELLO);
         }

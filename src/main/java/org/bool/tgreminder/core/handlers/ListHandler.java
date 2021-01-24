@@ -24,7 +24,7 @@ public class ListHandler implements CommandHandler {
     }
     
     @Override
-    public ReminderDto handle(Long chatId, String[] args) {
+    public ReminderDto handle(Integer userId, Long chatId, String[] args) {
         if ("/list".equals(args[0])) {
             List<ReminderDto> reminders = repository.findByChatId(chatId, reminderFactory.now());
             if (reminders.isEmpty()) {

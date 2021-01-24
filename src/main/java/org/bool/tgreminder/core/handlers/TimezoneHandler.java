@@ -18,7 +18,7 @@ public class TimezoneHandler implements CommandHandler {
     }
     
     @Override
-    public ReminderDto handle(Long chatId, String[] args) {
+    public ReminderDto handle(Integer userId, Long chatId, String[] args) {
         if ("/timezone".equals(args[0])) {
             if (args.length > 2) {
                 return reminderFactory.instantMessage(Messages.INVALID_REQUEST);

@@ -20,13 +20,13 @@ public class MessageParser {
         this.handlers = handlers;
     }
     
-    public ReminderDto parse(Long chatId, String text) {
+    public ReminderDto parse(Integer userId, Long chatId, String text) {
         String[] parts = StringUtils.splitByWholeSeparator(text, " ", 3);
         if (parts == null || parts.length < 1) {
             return reminderFactory.instantMessage(Messages.EMPTY_REQUEST);
         }
         return handlers.stream()
-                .map(handler -> handler.handle(chatId, parts))
+                .map(handler -> handler.handle(userId, chatId, parts))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElseGet(() -> reminderFactory.instantMessage(Messages.UNKNOWN_COMMAND));
