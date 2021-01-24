@@ -25,7 +25,7 @@ public class UserRepository {
     }
     
     public void insertUser(UserDto user) {
-        int updated = jdbcTemplate.update("INSERT INTO users VALUES(id=?, name=?, time_zone=?)",
+        int updated = jdbcTemplate.update("INSERT INTO users(id, name, time_zone) VALUES(?, ?, ?)",
                 user.getId(), user.getName(), user.getTimeZone());
         if (updated != 1) {
             throw new IncorrectResultSizeDataAccessException("User insert error: " + user.getId(), 1, updated);
