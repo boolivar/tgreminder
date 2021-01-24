@@ -2,7 +2,9 @@ package org.bool.tgreminder.core.handlers;
 
 import org.bool.tgreminder.core.CommandHandler;
 import org.bool.tgreminder.core.ReminderFactory;
+import org.bool.tgreminder.core.UserRepository;
 import org.bool.tgreminder.dto.ReminderDto;
+import org.bool.tgreminder.dto.UserDto;
 import org.bool.tgreminder.i18n.Messages;
 import org.springframework.stereotype.Component;
 
@@ -13,8 +15,11 @@ public class TimezoneHandler implements CommandHandler {
 
     private final ReminderFactory reminderFactory;
     
-    public TimezoneHandler(ReminderFactory reminderFactory) {
+    private final UserRepository userRepository;
+    
+    public TimezoneHandler(ReminderFactory reminderFactory, UserRepository userRepository) {
         this.reminderFactory = reminderFactory;
+        this.userRepository = userRepository;
     }
     
     @Override
@@ -23,9 +28,17 @@ public class TimezoneHandler implements CommandHandler {
             if (args.length > 2) {
                 return reminderFactory.instantMessage(Messages.INVALID_REQUEST);
             }
-            ZoneId timeZone = args.length > 1 ? ZoneId.of(args[1]) : ZoneId.systemDefault();
-            return reminderFactory.instantMessage(Messages.TIMEZONE_UPDATED, timeZone.toString());
+            UserDto user = args.length > 1
+                    ? updateTimeZone(userId, ZoneId.of(args[1]))
+                    : userRepository.findById(userId);
+            return reminderFactory.instantMessage(Messages.TIMEZONE_UPDATED, user.getTimeZone());
         }
         return null;
+    }
+    
+    private UserDto updateTimeZone(Integer userId, ZoneId zoneId) {
+        UserDto user = new UserDto(userId, null, zoneId.toString());
+        userRepository.updateUser(user);
+        return user;
     }
 }
