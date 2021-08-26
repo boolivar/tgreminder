@@ -37,10 +37,7 @@ public class TimezoneHandler implements CommandHandler {
     @Override
     public ReminderDto handle(Integer userId, Long chatId, String[] args) {
         if ("/timezone".equals(args[0])) {
-            if (args.length > 2) {
-                return reminderFactory.instantMessage(Messages.INVALID_REQUEST);
-            }
-            UserDto user = args.length > 1 && StringUtils.isNotBlank(args[1])
+            UserDto user = args.length > 1
                     ? updateTimeZone(userId, ZoneId.of(args[1]))
                     : userRepository.findById(userId);
             return reminderFactory.instantMessage(Messages.TIMEZONE_UPDATED, Objects.toString(user.getTimeZone(), defaultTimeZone));

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Component
 public class ReminderFactory {
@@ -35,5 +36,9 @@ public class ReminderFactory {
     
     public OffsetDateTime now() {
         return OffsetDateTime.now(clock);
+    }
+    
+    public ZoneId zoneId(String zone) {
+        return zone != null ? ZoneId.of(zone) : clock.getZone();
     }
 }

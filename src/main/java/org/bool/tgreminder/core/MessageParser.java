@@ -21,7 +21,7 @@ public class MessageParser {
     }
     
     public ReminderDto parse(Integer userId, Long chatId, String text) {
-        String[] parts = StringUtils.splitByWholeSeparator(text, " ", 3);
+        String[] parts = StringUtils.splitByWholeSeparator(text, " ", 2);
         if (parts == null || parts.length < 1) {
             return reminderFactory.instantMessage(Messages.EMPTY_REQUEST);
         }
