@@ -4,10 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.bool.tgreminder.core.CommandHandler;
 import org.bool.tgreminder.core.ReminderFactory;
 import org.bool.tgreminder.core.Repository;
+import org.bool.tgreminder.core.UserRepository;
 import org.bool.tgreminder.dto.ReminderDto;
 import org.bool.tgreminder.i18n.Messages;
 import org.springframework.stereotype.Component;
 
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,9 +20,12 @@ public class ListHandler implements CommandHandler {
     
     private final Repository repository;
     
-    public ListHandler(ReminderFactory reminderFactory, Repository repository) {
+    private final UserRepository userRepository;
+    
+    public ListHandler(ReminderFactory reminderFactory, Repository repository, UserRepository userRepository) {
         this.reminderFactory = reminderFactory;
         this.repository = repository;
+        this.userRepository = userRepository;
     }
     
     @Override
@@ -30,8 +35,9 @@ public class ListHandler implements CommandHandler {
             if (reminders.isEmpty()) {
                 return reminderFactory.instantMessage(Messages.EMPTY_LIST); 
             }
+            ZoneId zoneId = reminderFactory.zoneId(userRepository.findById(userId).getTimeZone());
             String message = reminders.stream()
-                    .map(r -> StringUtils.joinWith(" ", r.getChatIndex(), r.getTime(), StringUtils.abbreviate(r.getMessage(), 16)))
+                    .map(r -> StringUtils.joinWith(" ", r.getChatIndex(), r.getTime().atZoneSameInstant(zoneId).toOffsetDateTime(), StringUtils.abbreviate(r.getMessage(), 16)))
                     .collect(Collectors.joining("\n"));
             return reminderFactory.instantMessage(message);
         }
