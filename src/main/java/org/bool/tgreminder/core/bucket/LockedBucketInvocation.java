@@ -5,7 +5,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
 
 import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.stereotype.Component;
 
+@Component
 public class LockedBucketInvocation implements BucketInvocation {
     
     private final ConcurrentMap<Object, CountDownLatch> locks;

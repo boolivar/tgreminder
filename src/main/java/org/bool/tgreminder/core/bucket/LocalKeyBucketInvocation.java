@@ -1,9 +1,7 @@
 package org.bool.tgreminder.core.bucket;
 
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.stereotype.Component;
 
-@Component
 public class LocalKeyBucketInvocation implements BucketInvocation {
 
     private final ThreadLocal<Object> localKey;

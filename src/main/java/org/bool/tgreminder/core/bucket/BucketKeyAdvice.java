@@ -1,9 +1,8 @@
-package org.bool.tgreminder.core;
+package org.bool.tgreminder.core.bucket;
 
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.bool.tgreminder.core.bucket.BucketInvocation;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;

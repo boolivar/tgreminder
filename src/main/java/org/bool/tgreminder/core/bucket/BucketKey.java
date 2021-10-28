@@ -1,4 +1,4 @@
-package org.bool.tgreminder.core;
+package org.bool.tgreminder.core.bucket;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
