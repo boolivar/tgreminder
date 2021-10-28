@@ -2,8 +2,8 @@ package org.bool.tgreminder.config;
 
 import com.zaxxer.hikari.HikariDataSource;
 
-import org.bool.tgreminder.core.BucketKeyAdvice;
 import org.bool.tgreminder.core.LocalKeyTargetSource;
+import org.bool.tgreminder.core.bucket.LocalKeyBucketInvocation;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -30,7 +30,7 @@ public class DataSourceConfig implements BeanPostProcessor {
     private DataSourceProperties dataSourceProperties;
     
     @Autowired
-    private BucketKeyAdvice bucketKeyAdvice;
+    private LocalKeyBucketInvocation bucketKeySource;
     
     @Autowired
     private ConfigurableApplicationContext context;
@@ -48,7 +48,7 @@ public class DataSourceConfig implements BeanPostProcessor {
             
             List<DataSource> targets = Stream.concat(Stream.of(dataSource), bucketDataSources).collect(Collectors.toList());
             
-            return ProxyFactory.getProxy(DataSource.class, new LocalKeyTargetSource<>(DataSource.class, targets, bucketKeyAdvice::getKey));
+            return ProxyFactory.getProxy(DataSource.class, new LocalKeyTargetSource<>(DataSource.class, targets, bucketKeySource::getKey));
         }
         return bean;
     }

@@ -3,9 +3,11 @@ package org.bool.tgreminder.core;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.bool.tgreminder.core.bucket.BucketInvocation;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
 import org.springframework.stereotype.Component;
@@ -20,18 +22,19 @@ public class BucketKeyAdvice extends AbstractPointcutAdvisor implements MethodIn
 
     private final Pointcut pointcut;
     
+    private final BucketInvocation bucketInvocation;
+    
     private final ParameterNameDiscoverer discoverer;
     
-    private final ThreadLocal<Object> localKey;
-    
-    public BucketKeyAdvice() {
-        this(new AnnotationMatchingPointcut(null, BucketKey.class), new DefaultParameterNameDiscoverer(), new ThreadLocal<>());
+    @Autowired
+    public BucketKeyAdvice(BucketInvocation bucketInvocation) {
+        this(new AnnotationMatchingPointcut(null, BucketKey.class), bucketInvocation, new DefaultParameterNameDiscoverer());
     }
     
-    public BucketKeyAdvice(Pointcut pointcut, ParameterNameDiscoverer discoverer, ThreadLocal<Object> localKey) {
+    public BucketKeyAdvice(Pointcut pointcut, BucketInvocation bucketInvocation, ParameterNameDiscoverer discoverer) {
         this.pointcut = pointcut;
+        this.bucketInvocation = bucketInvocation;
         this.discoverer = discoverer;
-        this.localKey = localKey;
     }
     
     @Override
@@ -44,18 +47,10 @@ public class BucketKeyAdvice extends AbstractPointcutAdvisor implements MethodIn
         return this;
     }
     
-    public Object getKey() {
-        return localKey.get();
-    }
-    
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        localKey.set(findKey(invocation.getMethod(), invocation.getArguments()));
-        try {
-            return invocation.proceed();
-        } finally {
-            localKey.remove();
-        }
+        Object key = findKey(invocation.getMethod(), invocation.getArguments());
+        return bucketInvocation.invoke(key, invocation);
     }
     
     private Object findKey(Method method, Object[] arguments) {
