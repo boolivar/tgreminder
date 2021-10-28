@@ -57,8 +57,8 @@ class RepositoryIT {
     
     @Test
     void testStore() {
-        repository.store(5L, 5L, "test1", time("2001-01-01T01:30"));
-        repository.store(7L, 5L, "test2", time("2002-02-02T02:30"));
+        repository.store(5L, 5L, 1L, "test1", time("2001-01-01T01:30"));
+        repository.store(7L, 5L, 2L, "test2", time("2002-02-02T02:30"));
         
         assertThat(repository.find(5L, 5L, EPOCH_TIME))
                 .hasSize(1)
@@ -77,8 +77,8 @@ class RepositoryIT {
     
     @Test
     void testDelete() {
-        repository.store(5L, 5L, "a", time("2002-02-03T22:30"));
-        repository.store(5L, 5L, "b", time("2002-02-03T23:30"));
+        repository.store(5L, 5L, 1L, "a", time("2002-02-03T22:30"));
+        repository.store(5L, 5L, 2L, "b", time("2002-02-03T23:30"));
         
         assertThat(repository.findByChatId(5L, EPOCH_TIME))
                 .hasSize(2);
@@ -101,8 +101,8 @@ class RepositoryIT {
     
     @Test
     void testQueryByTime() {
-        repository.store(5L, 5L, "ONE", time("2005-05-05T03:30"));
-        repository.store(5L, 6L, "TWO", time("2006-03-04T23:30"));
+        repository.store(5L, 5L, 1L, "ONE", time("2005-05-05T03:30"));
+        repository.store(5L, 6L, 2L, "TWO", time("2006-03-04T23:30"));
         
         BiConsumer<Long, String> handler = Mockito.mock(BiConsumer.class);
         repository.queryByTime(time("2005-05-05T03:30"), handler);
@@ -128,7 +128,7 @@ class RepositoryIT {
             List<Callable<Void>> tasks = LongStream.range(0, threadCount)
                     .<Callable<Void>>mapToObj(userId -> () -> {
                         for (int i = 0; i < recordCount; ++i) {
-                            repository.store(userId, 3L, "test", OffsetDateTime.now());
+                            repository.store(userId, 3L, (long) (userId * recordCount) + i, "test", OffsetDateTime.now());
                         }
                         return null;
                     })
@@ -138,9 +138,9 @@ class RepositoryIT {
                 result.get();
             }
             
-            assertThat(repository.delete(3L, threadCount * recordCount + 1))
-                    .isEqualTo(0);
             assertThat(repository.delete(3L, threadCount * recordCount))
+                    .isEqualTo(0);
+            assertThat(repository.delete(3L, threadCount * recordCount - 1))
                     .isEqualTo(1);
         }
     }

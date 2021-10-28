@@ -38,9 +38,14 @@ public class Repository {
         return jdbcTemplate.query("select * from REMINDERS where USER_ID = ? and CHAT_ID = ? and TIME > ? order by TIME, ID", this::mapDto, userId, chatId, time);
     }
     
-    public void store(Long userId, Long chatId, String message, OffsetDateTime time) {
-        jdbcTemplate.update("insert into REMINDERS(ID, CHAT_INDEX, USER_ID, CHAT_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), (select coalesce(max(CHAT_INDEX), 0) + 1 from REMINDERS where CHAT_ID = ?), ?, ?, ?, ?)",
-                chatId, userId, chatId, message, time);
+    public void store(Long userId, Long chatId, Long chatIndex, String message, OffsetDateTime time) {
+        jdbcTemplate.update("insert into REMINDERS(ID, CHAT_ID, CHAT_INDEX, USER_ID, MESSAGE, TIME) values(nextval('REMINDERS_SEQ'), ?, ?, ?, ?, ?)",
+                chatId, chatIndex, userId, message, time);
+    }
+    
+    public Long increment(Long chatId) {
+        return jdbcTemplate.queryForObject("insert into chats(CHAT_ID, CHAT_INDEX) values (?, 1)"
+                + " on conflict (CHAT_ID) do update set CHAT_INDEX = chats.CHAT_INDEX + 1 returning CHAT_INDEX", Long.class, chatId);
     }
     
     public int delete(Long chatId, Integer chatIndex) {

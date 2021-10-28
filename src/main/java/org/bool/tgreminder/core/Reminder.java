@@ -48,7 +48,8 @@ public class Reminder {
     }
     
     private void schedule(Long userId, Long chatId, String message, OffsetDateTime time) {
-        repository.store(userId, chatId, message, time);
+        Long chatIndex = repository.increment(chatId);
+        repository.store(userId, chatId, chatIndex, message, time);
         scheduler.schedule(this::remind, time);
     }
     
